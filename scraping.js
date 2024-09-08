@@ -3,8 +3,10 @@ const cheerio = require('cheerio')
 const express = require('express')
 const app = express()
 const fs = require('fs')
-
+const PORT = 3001
 const url = 'https://elpais.com/ultimas-noticias/'
+
+let noticias = []
 
 app.get("/", async (req, res) => {
     try {
@@ -12,34 +14,18 @@ app.get("/", async (req, res) => {
       const html = response.data
       const $ = cheerio.load(html)
 
-      //const h2 = $("header.c_h h2").text()
-     // const p = $("p.c_d").text()
-     // console.log(p)
-      
-
-      
-
-      const links = []
-      const titulos = []
-      $("article.c c-d c--m ").each((i,elemento) => {
-        const link = $(elemento).find('a').attr("href")
-        const titulo = $(elemento).find('h2.c_t').text()
-        links.push(link)
-        titulos.push(titulo)
-        console.log(titulos)
-      })    
-
-    let noticias = []
-      const noticia = {
-        titulo: titulos,
-        imagen: "",
-        descripcion: "",
-        enlace: links,
-      };
-      noticias.push(noticia)
-
-fs.writeFileSync('noticias.json', JSON.stringify(noticias, null, 2))
-
+      $('.b-st_a').find('article').each((i,element) => {
+        const noticia = {
+            id: noticias.length +1 ,
+            title: $(element).find('h2').text(),
+            image: $(element).find('img').attr("src"),
+            description: $(element).find('p').text(),
+            link: $(element).find('a').attr('href')
+        }
+       
+        noticias.push(noticia)
+      })
+      guardarDatos()
 
     } catch (error) {
         console.error(`el error es el ${error}`)
@@ -47,54 +33,12 @@ fs.writeFileSync('noticias.json', JSON.stringify(noticias, null, 2))
       }
      })
      
+app.listen(PORT, () => {
 
-app.listen(3001, () => {
-
-    console.log('express esta escuchando en el puerto http://localhost:3001')
+    console.log(`express esta escuchando en el puerto https://localhost:${PORT}`)
 
 })
-/*
-async function scrapingLinks(link) {
-    try {
-      const response = await axios.get(`https://es.wikipedia.org${link}`)
-      const html = response.data
-      const $ = cheerio.load(html)
-   
-   
-      const h2 = $("h2").text()
-      const images = []
-      $("img").each((i, elemento) => {
-        const src = $(elemento).attr("src")
-        images.push(src)
-      })
-      const texts = []
-      $("p").each((i, elemento) => {
-        const text = $(elemento).text()
-        texts.push(text)
-      })
-     
-      return {h2, images, texts}
-   
-   
-    } catch (error) {
-      console.error(`el error es el ${error}`)
-      res.status(500).send(`Error interno ${error}`)
-    }
-}
-*/
 
-
-/*
-function leerDatos() {
-    try {
-      const data = fs.readFileSync('noticias.json', 'utf-8');
-      noticias = JSON.parse(data);
-    } catch (error) {
-      console.error('Error al leer el archivo noticias.json:', error.message);
-    }
-  }
-  
-  
   function guardarDatos() {
     fs.writeFileSync('noticias.json', JSON.stringify(noticias, null, 2));
-  }*/
+  }
